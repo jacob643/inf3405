@@ -9,19 +9,20 @@ public class Server {
 	
 	public static void main(String[] args)
 	{
-		while(!init());//call init until we have valid entries
+		while(!requestValidAdress());//call init until we have valid entries
 		
 		System.out.println("hello");
-		userInput.close();		
+		userInput.close();
 	}
 	
-	private static Boolean init()
+	private static void showRules()
 	{
 		System.out.println("enter ip and port between 5000 and 5050");
 		System.out.println("ex. 192.168.1.101:5000");
-		String firstInput = userInput.nextLine();
-		String[] input = firstInput.split("[:\\.]", 5 + 1);
-		
+	}
+	
+	private static Boolean validateFormat(String firstInput, String[] input)
+	{
 		////////////////////////////////////////////////////////////
 		// check for valid format
 		////////////////////////////////////////////////////////////
@@ -31,7 +32,11 @@ public class Server {
 			System.out.println(firstInput + " does not have the good format--> X.X.X.X:X");
 			return false;
 		}
-		
+		return true;
+	}
+	
+	private static Boolean validateIpAddress(String[] input)
+	{
 		////////////////////////////////////////////////////////////
 		// check for valid ip address
 		////////////////////////////////////////////////////////////
@@ -61,9 +66,14 @@ public class Server {
 				input[1] + '.' +
 				input[2] + '.' +
 				input[3];
-		
+		return true;
+
+	}
+	
+	private static Boolean validatePort(String[] input)
+	{
 		////////////////////////////////////////////////////////////
-		// check for valid port number
+		// check for valid port
 		////////////////////////////////////////////////////////////
 		
 		try 
@@ -79,6 +89,22 @@ public class Server {
 		if(port < 5000 || port > 5050)
 		{
 			System.out.println("port: " + port + " must be between 5000 and 5050");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private static Boolean requestValidAdress()
+	{
+		showRules();
+		String firstInput = userInput.nextLine();
+		String[] input = firstInput.split("[:\\.]", 5 + 1);
+		
+		if( !validateFormat(firstInput, input) ||
+			!validateIpAddress(input) ||
+			!validatePort(input))
+		{
 			return false;
 		}
 		
