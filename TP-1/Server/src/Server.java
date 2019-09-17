@@ -5,22 +5,21 @@ public class Server {
 	
 	private static String ip = "";
 	private static int port = 0;
+	private static Scanner userInput = new Scanner(System.in);
 	
 	public static void main(String[] args)
 	{
 		while(!init());//call init until we have valid entries
 		
 		System.out.println("hello");
-		
+		userInput.close();		
 	}
 	
 	private static Boolean init()
 	{
 		System.out.println("enter ip and port between 5000 and 5050");
 		System.out.println("ex. 192.168.1.101:5000");
-		Scanner userInput = new Scanner(System.in);
 		String firstInput = userInput.nextLine();
-		userInput.close();
 		String[] input = firstInput.split("[:\\.]", 5 + 1);
 		
 		////////////////////////////////////////////////////////////
