@@ -1,4 +1,6 @@
 import java.util.Scanner;
+import java.io.IOException;
+import java.nio.file.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -8,14 +10,48 @@ public class Server {
 	private static String ip = "";
 	private static int port = 0;
 	private static Scanner userInput = new Scanner(System.in);
+	private static Path currentPath = Paths.get(".\\Storage");
 	
 	public static void main(String[] args)
 	{
 
+		System.out.println(currentPath.toString());
+		
 		while(!requestValidAdress());//call init until we have valid entries
 		
 		System.out.println(getTime() + " address: " + ip + ":" + port);
+		
+		System.out.println("enter folder name");
+		String firstInput = userInput.nextLine();
+		if(!createFolder(firstInput))
+		{
+			System.out.println("the folder already existed!");
+		}
+		else
+		{
+			System.out.println("it's all good :) we should show you the new content now :P");
+		}
 		userInput.close();
+	}
+	
+	private static Boolean createFolder(String name)
+	{
+		Path newFolderPath = Paths.get(currentPath.toString(), name);
+		if(Files.notExists(newFolderPath))
+		{
+			try
+			{
+				Files.createDirectory(newFolderPath);
+				return true;
+			} 
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+		{
+			return false;
+		}
 	}
 	
 	private static String getTime()
