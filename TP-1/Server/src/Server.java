@@ -1,4 +1,6 @@
 import java.util.Scanner;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class Server {
@@ -9,10 +11,17 @@ public class Server {
 	
 	public static void main(String[] args)
 	{
+
 		while(!requestValidAdress());//call init until we have valid entries
 		
-		System.out.println("hello");
+		System.out.println(getTime() + " address: " + ip + ":" + port);
 		userInput.close();
+	}
+	
+	private static String getTime()
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd @ HH:mm:ss");
+		return formatter.format(new Date());
 	}
 	
 	private static void showRules()
