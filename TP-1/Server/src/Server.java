@@ -1,8 +1,13 @@
 import java.util.Scanner;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.io.DataOutputStream;
+import java.net.Socket;
 
 
 public class Server {
@@ -11,15 +16,27 @@ public class Server {
 	private static int port = 0;
 	private static Scanner userInput = new Scanner(System.in);
 	private static Path currentPath = Paths.get(".\\Storage");
+	private static ServerSocket Listener;
 	
-	public static void main(String[] args)
+	public static void main(String[] args) throws Exception
 	{
 
 		System.out.println(currentPath.toString());
 		
 		while(!requestValidAdress());//call init until we have valid entries
 		
+		
+		
+		int clientNumber = 0;
+		
+		Listener = new ServerSocket();
+		Listener.setReuseAddress(true);
+		InetAddress serverIP = InetAddress.getByName(ip);
+		
+		Listener.bind(new InetSocketAddress(ip, port));		
+		
 		System.out.println(getTime() + " address: " + ip + ":" + port);
+			
 		
 		System.out.println("enter folder name");
 		String firstInput = userInput.nextLine();
@@ -32,6 +49,20 @@ public class Server {
 			System.out.println("it's all good :) we should show you the new content now :P");
 		}
 		userInput.close();
+		
+		
+		try
+		{
+			while (true)
+			{
+				new ClientHandler(Listener.accept(), clientNumber++).run();
+			}
+		}
+		finally
+		{
+			Listener.close();
+		}
+		
 	}
 	
 	private static Boolean createFolder(String name)
@@ -160,3 +191,6 @@ public class Server {
 	}
 	
 }
+
+
+
