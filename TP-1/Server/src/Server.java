@@ -93,6 +93,7 @@ public class Server {
 	
 	private static void showRules()
 	{
+		System.out.println("What is your address ?");
 		System.out.println("enter ip and port between 5000 and 5050");
 		System.out.println("ex. 192.168.1.101:5000");
 	}
