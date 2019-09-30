@@ -1,4 +1,6 @@
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -22,7 +24,12 @@ public class Client {
 		String helloMessageFromServer = in.readUTF();
 		System.out.println(helloMessageFromServer);
 		
+		while(readCommands());
+		
+		System.out.println("quit done !");
+		
 		socket.close();
+		System.out.println("Session closed");
 	}
 	
 	private static void showRules()
@@ -123,5 +130,29 @@ public class Client {
 		// all verifications pass
 		////////////////////////////////////////////////////////////
 		return true;
+	}
+	
+	private static boolean readCommands()
+	{
+		boolean res = true;
+		String cmd = userInput.nextLine();		
+		String[] cmdWord = cmd.split(" ");
+		
+		if(cmdWord[0].equals("quit"))
+		{
+			System.out.println("quitting...");
+			res = false;
+		}
+		
+		try
+		{
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());	
+			out.writeUTF(cmd);
+		}
+		catch (IOException e)
+		{
+			System.out.println("Error handling command " + cmd + "; " + e);
+		}
+		return res;
 	}
 }

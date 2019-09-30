@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
@@ -15,13 +16,14 @@ public class Server {
 	private static String ip = "";
 	private static int port = 0;
 	private static Scanner userInput = new Scanner(System.in);
-	private static Path currentPath = Paths.get(".\\Storage");
+	private static Path currentPath = Paths.get("C:/");
 	private static ServerSocket Listener;
 	
 	public static void main(String[] args) throws Exception
 	{
 
 		System.out.println(currentPath.toString());
+		
 		
 		while(!requestValidAdress());//call init until we have valid entries
 		
@@ -38,7 +40,7 @@ public class Server {
 		System.out.println(getTime() + " address: " + ip + ":" + port);
 			
 		
-		System.out.println("enter folder name");
+	/*	System.out.println("enter folder name");
 		String firstInput = userInput.nextLine();
 		if(!createFolder(firstInput))
 		{
@@ -48,14 +50,14 @@ public class Server {
 		{
 			System.out.println("it's all good :) we should show you the new content now :P");
 		}
-		userInput.close();
+		userInput.close();*/
 		
 		
 		try
 		{
 			while (true)
 			{
-				new ClientHandler(Listener.accept(), clientNumber++).run();
+				new ClientHandler(Listener.accept(), clientNumber++, currentPath).run();
 			}
 		}
 		finally
