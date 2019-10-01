@@ -1,14 +1,9 @@
 import java.util.Scanner;
-import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.net.Socket;
 
 
 public class Server {
@@ -33,26 +28,11 @@ public class Server {
 		
 		Listener = new ServerSocket();
 		Listener.setReuseAddress(true);
-		InetAddress serverIP = InetAddress.getByName(ip);
 		
 		Listener.bind(new InetSocketAddress(ip, port));		
 		
 		System.out.println(getTime() + " address: " + ip + ":" + port);
 			
-		
-	/*	System.out.println("enter folder name");
-		String firstInput = userInput.nextLine();
-		if(!createFolder(firstInput))
-		{
-			System.out.println("the folder already existed!");
-		}
-		else
-		{
-			System.out.println("it's all good :) we should show you the new content now :P");
-		}
-		userInput.close();*/
-		
-		
 		try
 		{
 			while (true)
@@ -65,26 +45,6 @@ public class Server {
 			Listener.close();
 		}
 		
-	}
-	
-	private static Boolean createFolder(String name)
-	{
-		Path newFolderPath = Paths.get(currentPath.toString(), name);
-		if(Files.notExists(newFolderPath))
-		{
-			try
-			{
-				Files.createDirectory(newFolderPath);
-				return true;
-			} 
-			catch (IOException e) 
-			{
-				e.printStackTrace();
-			}
-		}
-		{
-			return false;
-		}
 	}
 	
 	private static String getTime()

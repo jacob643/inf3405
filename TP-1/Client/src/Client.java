@@ -133,7 +133,7 @@ public class Client {
 	private static boolean sendCommands()
 	{
 		boolean res = true;
-		String cmd = userInput.nextLine();		
+		String cmd = userInput.nextLine();
 		String[] cmdWord = cmd.split(" ");
 		
 		if(cmdWord[0].equals("quit"))
