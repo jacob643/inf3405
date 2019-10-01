@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -54,6 +55,7 @@ public class ClientHandler {
 		
 		try
 		{
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			DataInputStream in = new DataInputStream(socket.getInputStream());		
 			String cmd = in.readUTF();
 			String[] cmdWord = cmd.split(" ");
@@ -64,6 +66,8 @@ public class ClientHandler {
 			
 			if(cmdWord[0].equals("quit"))
 			{
+				out.writeUTF("quit : done !");
+				out.writeUTF("end");
 				res = false;
 			}
 			else
@@ -74,9 +78,23 @@ public class ClientHandler {
 				if(cmdWord[0].equals("ls"))
 				{
 					String[] currentPathList = currentPath.toFile().list();
-					for (int i=0; i<currentPathList.length; i++)
+					if(currentPathList == null)
 					{
-						System.out.println(currentPathList[i]);
+						System.out.println("ls : this folder is empty");
+						out.writeUTF("ls : this folder is empty");
+						out.writeUTF("end");
+					}
+					else
+					{
+						out.writeUTF("ls done : " + currentPath.toFile().getName().toString() + " contains :");
+						System.out.println("ls : " + currentPath.toFile().getName().toString() + " contains :");
+						
+						for (int i=0; i<currentPathList.length; i++)
+						{
+							System.out.println(currentPathList[i]);
+							out.writeUTF(currentPathList[i]);
+						}
+						out.writeUTF("end");
 					}
 				}
 				else
@@ -85,22 +103,67 @@ public class ClientHandler {
 					/****** CD ******/	
 					
 					if(cmdWord[0].equals("cd"))
-					{
+					{						
 						String newPath = currentPath.toString();
-						if(cmdWord[1].equals(".."))
+						
+						if(cmdWord.length !=1)
 						{
-							newPath = currentPath.getParent().toString();
+							boolean newPathExist = false;
+							
+							if(cmdWord[1].equals(".."))
+							{
+								newPath = currentPath.getParent().toString();
+								newPathExist = true;
+							}
+							else
+							{
+								String followingPath = cmdWord[1];
+								for(int i=2; i<cmdWord.length;i++)
+								{
+									followingPath = followingPath + " " + cmdWord[i];
+								}
+								
+								String[] currentPathList = currentPath.toFile().list();
+								for (int i=0; i<currentPathList.length; i++)
+								{
+									if(currentPathList[i].equals(followingPath))
+									{
+										newPathExist = true;
+									}
+								}
+								
+								newPath = newPath + "\\" + followingPath;
+							}
+							
+							System.out.println("cd : going to : " + newPath);
+							
+							if(newPathExist)
+							{
+								currentPath = Paths.get(newPath);
+								
+								System.out.println("cd : done !");	
+								out.writeUTF("cd done : Your are in " + currentPath.toFile().getName().toString());
+								out.writeUTF("end");
+							}
+							else
+							{
+								System.out.println("cd error : The path " + newPath + " doesn't exist !");
+								out.writeUTF("cd error : The path " + newPath + " doesn't exist !");
+								out.writeUTF("end");
+							}
 						}
 						else
 						{
-							newPath += cmdWord[1];
+							System.out.println("cd : No arguments");
+							out.writeUTF("cd : No arguments");
+							out.writeUTF("end");
 						}
-						System.out.println("going to : " + newPath);
-						currentPath = Paths.get(newPath);
 					}
 					else
 					{
 						System.out.println("Wrong command...");
+						out.writeUTF("Wrong command...");
+						out.writeUTF("end");
 					}
 				}
 			}

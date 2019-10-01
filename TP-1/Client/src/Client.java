@@ -24,9 +24,7 @@ public class Client {
 		String helloMessageFromServer = in.readUTF();
 		System.out.println(helloMessageFromServer);
 		
-		while(readCommands());
-		
-		System.out.println("quit done !");
+		while(sendCommands());
 		
 		socket.close();
 		System.out.println("Session closed");
@@ -132,7 +130,7 @@ public class Client {
 		return true;
 	}
 	
-	private static boolean readCommands()
+	private static boolean sendCommands()
 	{
 		boolean res = true;
 		String cmd = userInput.nextLine();		
@@ -148,6 +146,8 @@ public class Client {
 		{
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());	
 			out.writeUTF(cmd);
+			
+			while(ReceiveAnwser());
 		}
 		catch (IOException e)
 		{
@@ -155,4 +155,30 @@ public class Client {
 		}
 		return res;
 	}
+	
+	private static boolean ReceiveAnwser()
+	{
+		boolean res = true;
+		try
+		{
+			DataInputStream in = new DataInputStream(socket.getInputStream());			
+			String AnwserFromServer = in.readUTF();
+			
+			if(AnwserFromServer.equals("end"))
+			{
+				res = false;
+			}
+			else 
+			{
+				System.out.println(AnwserFromServer);
+
+			}
+		}
+		catch (IOException e)
+		{
+			System.out.println("Error handling reception " + "; " + e);
+		}
+		return res;
+	}
+
 }
