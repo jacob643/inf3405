@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -10,7 +11,7 @@ import java.text.SimpleDateFormat;
 public class ClientHandler {
 	private Socket socket;
 	private int clientNumber;
-	Path currentPath;
+	private Path currentPath;
 	
 	public ClientHandler(Socket socket, int clientNumber, Path currentPath)
 	{
@@ -56,53 +57,48 @@ public class ClientHandler {
 		{
 			DataInputStream in = new DataInputStream(socket.getInputStream());		
 			String cmd = in.readUTF();
-			String[] cmdWord = cmd.split(" ");
+			String[] cmdWord = cmd.split(" ", 2);
 			
 			System.out.println("[" + socket.getInetAddress() + ":" + socket.getLocalPort() + ":" + socket.getPort() + " - " + getTime() + "]" + cmd);
 		
-			/****** QUIT ******/
 			
-			if(cmdWord[0].equals("quit"))
+			if(cmdWord[0].equalsIgnoreCase("quit"))
 			{
+				/****** QUIT ******/
 				res = false;
 			}
-			else
-			{	
-				
+			else if(cmdWord[0].equalsIgnoreCase("ls"))
+			{
 				/****** LS ******/
+				String[] currentPathList = currentPath.toFile().list();
+				for (int i=0; i<currentPathList.length; i++)
+				{
+					System.out.println(currentPathList[i]);
+				}
+			}
+			else if(cmdWord[0].equalsIgnoreCase("cd"))
+			{
+				/****** CD ******/
 				
-				if(cmdWord[0].equals("ls"))
+				String newPath = currentPath.toString();
+				if(cmdWord[1].equals(".."))
 				{
-					String[] currentPathList = currentPath.toFile().list();
-					for (int i=0; i<currentPathList.length; i++)
-					{
-						System.out.println(currentPathList[i]);
-					}
+					newPath = currentPath.getParent().toString();
 				}
-				else
+				else if(!cmdWord[1].equals("."))
 				{
-			
-					/****** CD ******/	
-					
-					if(cmdWord[0].equals("cd"))
-					{
-						String newPath = currentPath.toString();
-						if(cmdWord[1].equals(".."))
-						{
-							newPath = currentPath.getParent().toString();
-						}
-						else
-						{
-							newPath += cmdWord[1];
-						}
-						System.out.println("going to : " + newPath);
-						currentPath = Paths.get(newPath);
-					}
-					else
-					{
-						System.out.println("Wrong command...");
-					}
+					newPath += cmdWord[1] + '\\';
 				}
+				System.out.println("going to : " + newPath);
+				currentPath = Paths.get(newPath);
+			}
+			else if(cmdWord[0].equalsIgnoreCase("mkdir"))
+			{
+				mkdirCMD(cmdWord[1]);
+			}
+			else
+			{
+				System.out.println("Wrong command...");
 			}
 		}
 		catch (IOException e)
@@ -112,6 +108,25 @@ public class ClientHandler {
 		return res;
 	}
 	
+	private Boolean mkdirCMD(String name)
+	{
+		Path newFolderPath = Paths.get(currentPath.toString(), name);
+		if(Files.notExists(newFolderPath))
+		{
+			try
+			{
+				Files.createDirectory(newFolderPath);
+				return true;
+			} 
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+		{
+			return false;
+		}
+	}
 	
 	private static String getTime()
 	{
