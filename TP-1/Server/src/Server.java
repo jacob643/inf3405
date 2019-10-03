@@ -24,7 +24,7 @@ public class Server {
 		
 		
 		
-		int clientNumber = 0;
+		int clientNumber = 1;// The first client shall be client 1
 		
 		Listener = new ServerSocket();
 		Listener.setReuseAddress(true);
@@ -37,7 +37,7 @@ public class Server {
 		{
 			while (true)
 			{
-				new ClientHandler(Listener.accept(), clientNumber++, currentPath).run();
+				new ClientHandler(Listener.accept(), clientNumber++, currentPath).start();
 			}
 		}
 		finally

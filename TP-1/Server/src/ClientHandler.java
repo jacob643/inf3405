@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
-public class ClientHandler {
+public class ClientHandler extends Thread {
 	private Socket socket;
 	private int clientNumber;
 	private Path currentPath;
