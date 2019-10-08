@@ -136,7 +136,7 @@ public class Client {
 		String cmd = userInput.nextLine();
 		String[] cmdWord = cmd.split(" ");
 		
-		if(cmdWord[0].equals("quit"))
+		if(cmdWord[0].equals("exit"))
 		{
 			System.out.println("quitting...");
 			res = false;
