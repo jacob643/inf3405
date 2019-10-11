@@ -1,10 +1,9 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -79,10 +78,11 @@ public class ClientHandler extends Thread {
 			}
 			else if(cmdWord[0].equalsIgnoreCase("mkdir"))
 			{
-				if(!mkdirCMD(out, cmdWord[1]))
-				{
-					out.writeUTF("Something went wrong");
-				}
+				mkdirCMD(out, cmdWord[1]);
+			}
+			else if(cmdWord[0].equalsIgnoreCase("download"))
+			{
+				downloadCMD(out, cmdWord[1]);
 			}
 			else
 			{
@@ -97,8 +97,22 @@ public class ClientHandler extends Thread {
 		}
 		return res;
 	}
+
+	private void downloadCMD(DataOutputStream out, String name) throws IOException //TODO mettre try catch instead
+	{
+		System.out.println("in download cmd");
+		Path filePath = Paths.get(currentPath.toString() + "\\" + name);
+		InputStream in = Files.newInputStream(filePath, StandardOpenOption.READ);
+		System.out.println("out and in created");
+		
+		byte[] chunk = in.readAllBytes();
+		System.out.println("read done! " + chunk.length + " bytes!");
+		out.writeUTF(Integer.toString(chunk.length));
+		out.write(chunk);
+		System.out.println("write done!");
+	}
 	
-	private Boolean mkdirCMD(DataOutputStream out, String name)
+	private void mkdirCMD(DataOutputStream out, String name)
 	{
 		Path newFolderPath = Paths.get(currentPath.toString(), name);
 		if(Files.notExists(newFolderPath))
@@ -110,28 +124,21 @@ public class ClientHandler extends Thread {
 				System.out.println("mkdir : done !");	
 				out.writeUTF("mkdir done : " + name + " have been created in " + currentPath.toString());
 				out.writeUTF("end");
-				
-				return true;
 			} 
 			catch (IOException e) 
 			{
 				e.printStackTrace();
 			}
 		}
+		try
+		{			
+			System.out.println("cd error : The directory " + name + " already exist !");
+			out.writeUTF("cd error : The directory " + name + " already exist !");
+			out.writeUTF("end");
+		}
+		catch (IOException e) 
 		{
-			try
-			{			
-				System.out.println("cd error : The directory " + name + " already exist !");
-				out.writeUTF("cd error : The directory " + name + " already exist !");
-				out.writeUTF("end");
-				
-				return true;
-			} 
-			catch (IOException e) 
-			{
-				e.printStackTrace();
-			}
-			return false;
+			e.printStackTrace();
 		}
 	}
 	

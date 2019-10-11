@@ -1,7 +1,9 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.file.*;
 import java.util.Scanner;
 
 public class Client {
@@ -130,30 +132,87 @@ public class Client {
 		return true;
 	}
 	
+	private static void ReceiveDownloadAnswer(String name) throws IOException
+	{
+		System.out.println("in download cmd");
+
+		DataInputStream in = new DataInputStream(socket.getInputStream());
+		String home = System.getProperty("user.home");
+		Path filePath = Paths.get(home + "\\Desktop\\" + name);
+		OutputStream out = null;
+
+		int i = 0;
+		boolean work = false;
+		do
+		{
+			Path newFilePath = filePath;
+			if (i != 0)
+			{
+				newFilePath = Paths.get(filePath.toString(), Integer.toString(i));
+			}
+			
+			try
+			{
+				out = Files.newOutputStream(newFilePath, StandardOpenOption.CREATE_NEW);
+				work = true;
+			}
+			catch(Exception e) {i++;}
+			
+		} while (!work);
+		
+		System.out.println("in and out created");
+		String length = in.readUTF();
+		int Size = Integer.parseInt(length);
+		int readSize = 0;
+		int toReadSize = Size > 1000 ? 1000 : Size;
+		do
+		{
+			byte[] chunk = new byte[1000];
+			in.read(chunk, 0, toReadSize);
+			System.out.println("read done");
+			out.write(chunk, readSize, toReadSize);
+			System.out.println("write done in : " + filePath.toString());
+			readSize += toReadSize;
+		} while(Size < readSize);
+	}
+	
 	private static boolean sendCommands()
 	{
-		boolean res = true;
+		boolean exit = false;
 		String cmd = userInput.nextLine();
 		String[] cmdWord = cmd.split(" ");
+		System.out.println("juste apres anvoyer le split");
 		
 		if(cmdWord[0].equals("exit"))
 		{
 			System.out.println("quitting...");
-			res = false;
+			exit = true;
 		}
-		
+		System.out.println("apres verif pour exit");
+		System.out.println("voici la cmd: " + cmd);
+		System.out.println("voici cmd[1]: " + cmdWord[0]);
+
 		try
 		{
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());	
+			System.out.println("juste avant anvoyer la cmd au serv");
 			out.writeUTF(cmd);
-			
-			while(ReceiveAnwser());
+			System.out.println("juste apres anvoyer la cmd au serv");
+			if(cmdWord[0].equals("download"))
+			{
+				System.out.println("juste avant receivedownload answer");
+				ReceiveDownloadAnswer(cmdWord[1]);
+			}
+			else
+			{
+				while(ReceiveAnwser());
+			}
 		}
 		catch (IOException e)
 		{
 			System.out.println("Error handling command " + cmd + "; " + e);
 		}
-		return res;
+		return !exit;
 	}
 	
 	private static boolean ReceiveAnwser()
