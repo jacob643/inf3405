@@ -79,7 +79,10 @@ public class ClientHandler extends Thread {
 			}
 			else if(cmdWord[0].equalsIgnoreCase("mkdir"))
 			{
-				mkdirCMD(out, cmdWord[1]);
+				if(!mkdirCMD(out, cmdWord[1]))
+				{
+					out.writeUTF("Something went wrong");
+				}
 			}
 			else
 			{
