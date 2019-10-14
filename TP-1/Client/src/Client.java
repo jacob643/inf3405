@@ -148,9 +148,9 @@ public class Client {
 			Path newFilePath = filePath;
 			if (i != 0)
 			{
-				newFilePath = Paths.get(filePath.toString(), Integer.toString(i));
+				newFilePath = Paths.get(filePath.toString() + Integer.toString(i));
 			}
-			
+			System.out.println(newFilePath.toString());			
 			try
 			{
 				out = Files.newOutputStream(newFilePath, StandardOpenOption.CREATE_NEW);
@@ -161,9 +161,7 @@ public class Client {
 		} while (!work);
 		
 		System.out.println("in and out created");
-		String length = in.readUTF();
-		int Size = Integer.parseInt(length);
-		int readSize = 0;
+		/*int readSize = 0;
 		int toReadSize = Size > 1000 ? 1000 : Size;
 		do
 		{
@@ -173,7 +171,15 @@ public class Client {
 			out.write(chunk, readSize, toReadSize);
 			System.out.println("write done in : " + filePath.toString());
 			readSize += toReadSize;
-		} while(Size < readSize);
+		} while(Size < readSize);*/
+		int length = in.readInt();
+		
+		byte[] chunk = new byte[length];
+		in.read(chunk, 0, length);
+		System.out.println("read done");
+		
+		out.write(chunk);
+		System.out.println("write done");
 	}
 	
 	private static boolean sendCommands()

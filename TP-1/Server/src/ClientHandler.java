@@ -107,7 +107,7 @@ public class ClientHandler extends Thread {
 		
 		byte[] chunk = in.readAllBytes();
 		System.out.println("read done! " + chunk.length + " bytes!");
-		out.writeUTF(Integer.toString(chunk.length));
+		out.writeInt(chunk.length);
 		out.write(chunk);
 		System.out.println("write done!");
 	}
