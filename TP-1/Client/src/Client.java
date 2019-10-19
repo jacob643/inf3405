@@ -132,25 +132,25 @@ public class Client {
 		return true;
 	}
 	
-	private static void ReceiveDownloadAnswer(String name) throws IOException
+	private static void ReceiveDownloadAnswer(String filename) throws IOException
 	{
 		System.out.println("in download cmd");
 
 		DataInputStream in = new DataInputStream(socket.getInputStream());
 		String home = System.getProperty("user.home");
-		Path filePath = Paths.get(home + "\\Desktop\\" + name);
+		String filePath = home + "\\Desktop\\";
 		OutputStream out = null;
 
 		int i = 0;
 		boolean work = false;
+		Path newFilePath = Paths.get(filePath + filename);
 		do
 		{
-			Path newFilePath = filePath;
 			if (i != 0)
 			{
-				newFilePath = Paths.get(filePath.toString() + Integer.toString(i));
+				newFilePath = Paths.get(filePath + "(copy " + Integer.toString(i) + ")" + filename);
 			}
-			System.out.println(newFilePath.toString());			
+			System.out.println(newFilePath.toString());
 			try
 			{
 				out = Files.newOutputStream(newFilePath, StandardOpenOption.CREATE_NEW);
@@ -161,25 +161,25 @@ public class Client {
 		} while (!work);
 		
 		System.out.println("in and out created");
-		/*int readSize = 0;
-		int toReadSize = Size > 1000 ? 1000 : Size;
-		do
+		
+		long lengthToRead = in.readLong();
+		long initial = lengthToRead;
+		byte[] chunk = new byte[1000];
+		int length;
+		long progress = 0;
+		
+		while(lengthToRead > 0)
 		{
-			byte[] chunk = new byte[1000];
-			in.read(chunk, 0, toReadSize);
-			System.out.println("read done");
-			out.write(chunk, readSize, toReadSize);
-			System.out.println("write done in : " + filePath.toString());
-			readSize += toReadSize;
-		} while(Size < readSize);*/
-		int length = in.readInt();
+			length = in.read(chunk);
+			out.write(chunk, 0, length);
+			lengthToRead -= length;
+			long newProgress = 100 - (lengthToRead*100)/initial;
+			if (newProgress != progress) System.out.print(newProgress + "%");
+			progress = newProgress;
+		}
+		System.out.println("download done in " + newFilePath);
+		out.close();
 		
-		byte[] chunk = new byte[length];
-		in.read(chunk, 0, length);
-		System.out.println("read done");
-		
-		out.write(chunk);
-		System.out.println("write done");
 	}
 	
 	private static boolean sendCommands()
@@ -187,26 +187,19 @@ public class Client {
 		boolean exit = false;
 		String cmd = userInput.nextLine();
 		String[] cmdWord = cmd.split(" ");
-		System.out.println("juste apres anvoyer le split");
 		
 		if(cmdWord[0].equals("exit"))
 		{
 			System.out.println("quitting...");
 			exit = true;
 		}
-		System.out.println("apres verif pour exit");
-		System.out.println("voici la cmd: " + cmd);
-		System.out.println("voici cmd[1]: " + cmdWord[0]);
 
 		try
 		{
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());	
-			System.out.println("juste avant anvoyer la cmd au serv");
 			out.writeUTF(cmd);
-			System.out.println("juste apres anvoyer la cmd au serv");
 			if(cmdWord[0].equals("download"))
 			{
-				System.out.println("juste avant receivedownload answer");
 				ReceiveDownloadAnswer(cmdWord[1]);
 			}
 			else

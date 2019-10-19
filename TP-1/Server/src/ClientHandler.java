@@ -1,5 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -100,16 +101,29 @@ public class ClientHandler extends Thread {
 
 	private void downloadCMD(DataOutputStream out, String name) throws IOException //TODO mettre try catch instead
 	{
-		System.out.println("in download cmd");
 		Path filePath = Paths.get(currentPath.toString() + "\\" + name);
 		InputStream in = Files.newInputStream(filePath, StandardOpenOption.READ);
+
 		System.out.println("out and in created");
 		
-		byte[] chunk = in.readAllBytes();
-		System.out.println("read done! " + chunk.length + " bytes!");
-		out.writeInt(chunk.length);
-		out.write(chunk);
+		File file = new File(filePath.toString());
+		if (!file.exists() || !file.isFile()) return;
+
+		long LengthToWrite = file.length();
+		
+		System.out.println(LengthToWrite + " bytes!");
+		out.writeLong(LengthToWrite);
+		byte[] chunk = new byte[1000];
+
+		while(LengthToWrite > 0)
+		{
+			int length = in.read(chunk);
+			out.write(chunk, 0 , length);
+			System.out.println("write done! " + length + " bytes");
+			LengthToWrite -= length;
+		}
 		System.out.println("write done!");
+		in.close();
 	}
 	
 	private void mkdirCMD(DataOutputStream out, String name)
