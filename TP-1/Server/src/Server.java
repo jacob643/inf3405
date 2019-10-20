@@ -49,7 +49,7 @@ public class Server {
 	
 	private static String getTime()
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd @ HH:mm:ss");
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd @ HH:mm:ss");
 		return formatter.format(new Date());
 	}
 	

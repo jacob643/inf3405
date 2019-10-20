@@ -151,19 +151,16 @@ public class ClientHandler extends Thread {
 		out.close();
 	}
 
-	private void downloadCMD(DataOutputStream out, String name) throws IOException //TODO mettre try catch instead
+	private void downloadCMD(DataOutputStream out, String name) throws IOException
 	{
 		Path filePath = Paths.get(currentPath.toString() + "\\" + name);
 		InputStream in = Files.newInputStream(filePath, StandardOpenOption.READ);
 
-		System.out.println("out and in created");
-		
 		File file = new File(filePath.toString());
 		if (!file.exists() || !file.isFile()) return;
 
 		long LengthToWrite = file.length();
 		
-		System.out.println(LengthToWrite + " bytes!");
 		out.writeLong(LengthToWrite);
 		byte[] chunk = new byte[1000];
 
@@ -171,10 +168,8 @@ public class ClientHandler extends Thread {
 		{
 			int length = in.read(chunk);
 			out.write(chunk, 0 , length);
-			System.out.println("write done! " + length + " bytes");
 			LengthToWrite -= length;
 		}
-		System.out.println("write done!");
 		in.close();
 	}
 	
@@ -187,24 +182,27 @@ public class ClientHandler extends Thread {
 			{
 				Files.createDirectory(newFolderPath);
 				
-				System.out.println("mkdir : done !");	
-				out.writeUTF("mkdir done : " + name + " have been created in " + currentPath.toString());
+				out.writeUTF("The folder " + name + " have been created in " + currentPath.toString());
 				out.writeUTF("end");
-			} 
+			}
 			catch (IOException e) 
 			{
 				e.printStackTrace();
 			}
 		}
-		try
-		{			
-			System.out.println("cd error : The directory " + name + " already exist !");
-			out.writeUTF("cd error : The directory " + name + " already exist !");
-			out.writeUTF("end");
-		}
-		catch (IOException e) 
+		else
 		{
-			e.printStackTrace();
+			
+			try
+			{			
+				System.out.println("cd error : The directory " + name + " already exist !");
+				out.writeUTF("cd error : The directory " + name + " already exist !");
+				out.writeUTF("end");
+			}
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -215,33 +213,27 @@ public class ClientHandler extends Thread {
 			String[] currentPathList = currentPath.toFile().list();
 			if(currentPathList == null)
 			{
-				System.out.println("ls : this folder is empty");
 				out.writeUTF("ls : this folder is empty");
 				out.writeUTF("end");
+				return;
 			}
-			else
+			
+			for (int i=0; i<currentPathList.length; i++)
 			{
-				out.writeUTF("ls done : " + currentPath.toFile().getName().toString() + " contains :");
-				System.out.println("ls : " + currentPath.toFile().getName().toString() + " contains :");
-				
-				for (int i=0; i<currentPathList.length; i++)
+				String test = currentPathList[i];
+				String[] currentPathListDivided = test.split("\\.");
+				if(currentPathListDivided.length != 1)
 				{
-					System.out.println(currentPathList[i]);
-					String test = currentPathList[i];
-					String[] currentPathListDivided = test.split("\\.");
-					System.out.println(currentPathListDivided.length);
-					if(currentPathListDivided.length != 1)
-					{
-						out.writeUTF("[FILE] " + currentPathList[i]);
-					}
-					else
-					{
-						out.writeUTF("[FOLDER] " + currentPathList[i]);
-					}
-					
+					out.writeUTF("[FILE] " + currentPathList[i]);
 				}
-				out.writeUTF("end");
+				else
+				{
+					out.writeUTF("[FOLDER] " + currentPathList[i]);
+				}
+				
 			}
+			out.writeUTF("end");
+			
 		}
 		catch(IOException e)
 		{
@@ -255,61 +247,64 @@ public class ClientHandler extends Thread {
 
 		try
 		{
-			if(cmdWord.length !=1)
+			
+			//testing for no arguments
+			if(cmdWord.length ==1)
 			{
-				boolean newPathExist = false;
-				
-				if(cmdWord[1].equals(".."))
-				{
-					newPath = currentPath.getParent().toString();
-					newPathExist = true;
-				}
-				else if(cmdWord[1].equals("."))
-				{
-					newPath = Paths.get("C:/").toString();
-					newPathExist = true;
-				}
-				else
-				{
-					String followingPath = cmdWord[1];
-					
-					String[] currentPathList = currentPath.toFile().list();
-					for (int i=0; i<currentPathList.length; i++)
-					{
-						if(currentPathList[i].equals(followingPath))
-						{
-							newPathExist = true;
-						}
-					}
-					
-					newPath = newPath + "\\" + followingPath;
-				}
-				
-				System.out.println("cd : going to : " + newPath);
-				
-				if(newPathExist)
-				{
-					currentPath = Paths.get(newPath);
-					
-					System.out.println("cd : done !");	
-					out.writeUTF("cd done : Your are in " + currentPath.toFile().getName().toString());
-					out.writeUTF("end");
-				}
-				else
-				{
-					System.out.println("cd error : The path " + newPath + " doesn't exist !");
-					out.writeUTF("cd error : The path " + newPath + " doesn't exist !");
-					out.writeUTF("end");
-				}
-			}
-			else
-			{
-				System.out.println("cd : No arguments");
 				out.writeUTF("cd : No arguments");
 				out.writeUTF("end");
 			}
+			
+			
+			boolean newPathExist = false;
+			
+			if(cmdWord[1].equals("."))
+			{
+				out.writeUTF("end");
+				return;//we don't want to be in the folder C:\.\.\. because it's the same as C:
+			}
+			
+			// check for parent folder
+			if(cmdWord[1].equals(".."))
+			{
+				newPath = currentPath.getParent().toString();
+				newPathExist = true;
+			}
+			
+			// check for root folder
+			if(cmdWord[1].equals("..."))
+			{
+				newPath = "C:/";
+				newPathExist = true;
+			}
+			
+			// check for folders in the current path
+			if(!newPathExist)
+			{
+				String followingPath = cmdWord[1];
+				
+				String[] currentPathList = currentPath.toFile().list();
+				for (int i=0; i<currentPathList.length && !newPathExist; i++)
+				{
+					newPathExist = currentPathList[i].equals(followingPath);
+				}
+				newPath = newPath + "\\" + followingPath;
+			}
+
+			// if we haven't found a solution by now, the path doesn't exist
+			if(!newPathExist)
+			{
+				out.writeUTF("cd error : The path " + newPath + " doesn't exist !");
+				out.writeUTF("end");
+				return;
+			}
+			
+			// that path is now the current path
+			currentPath = Paths.get(newPath);
+			out.writeUTF("You are now in the folder : " + currentPath.toString());
+			out.writeUTF("end");
 		}
-		catch(IOException e) 
+		catch(IOException e)
 		{
 			e.printStackTrace();
 		}
@@ -317,7 +312,7 @@ public class ClientHandler extends Thread {
 	
 	private static String getTime()
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd @ HH:mm:ss");
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd @ HH:mm:ss");
 		return formatter.format(new Date());
 	}
 }

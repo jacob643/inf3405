@@ -175,8 +175,8 @@ public class Client {
 			length = in.read(chunk);
 			out.write(chunk, 0, length);
 			lengthToRead -= length;
-			long newProgress = 100 - (lengthToRead*100)/initial;
-			if (newProgress != progress) System.out.print(newProgress + "%");
+			long newProgress = 10 - (lengthToRead*10)/initial;
+			if (newProgress != progress) System.out.println(newProgress + "0%");
 			progress = newProgress;
 		}
 		System.out.println("download done in " + newFilePath);
