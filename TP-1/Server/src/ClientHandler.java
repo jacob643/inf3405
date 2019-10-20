@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.*;
 import java.util.Date;
@@ -85,6 +86,10 @@ public class ClientHandler extends Thread {
 			{
 				downloadCMD(out, cmdWord[1]);
 			}
+			else if(cmdWord[0].equalsIgnoreCase("upload"))
+			{
+				uploadCMD(cmdWord[1]);
+			}
 			else
 			{
 				System.out.println("Wrong command...");
@@ -97,6 +102,53 @@ public class ClientHandler extends Thread {
 			System.out.println("Error handling client " + clientNumber + "; " + e);
 		}
 		return res;
+	}
+	
+	private void uploadCMD(String name) throws IOException
+	{
+		System.out.println("in upload cmd");
+
+		DataInputStream in = new DataInputStream(socket.getInputStream());
+		OutputStream out = null;
+
+		int i = 0;
+		boolean work = false;
+		Path newFilePath = Paths.get(currentPath + "//" + name);
+		do
+		{
+			if (i != 0)
+			{
+				newFilePath = Paths.get(currentPath + "//" + "(copy " + Integer.toString(i) + ")" + name);
+			}
+			System.out.println(newFilePath.toString());
+			try
+			{
+				out = Files.newOutputStream(newFilePath, StandardOpenOption.CREATE_NEW);
+				work = true;
+			}
+			catch(Exception e) {i++;}
+			
+		} while (!work);
+		
+		System.out.println("in and out created");
+		
+		long lengthToRead = in.readLong();
+		long initial = lengthToRead;
+		byte[] chunk = new byte[1000];
+		int length;
+		long progress = 0;
+		
+		while(lengthToRead > 0)
+		{
+			length = in.read(chunk);
+			out.write(chunk, 0, length);
+			lengthToRead -= length;
+			long newProgress = 100 - (lengthToRead*100)/initial;
+			if (newProgress != progress) System.out.print(newProgress + "%");
+			progress = newProgress;
+		}
+		System.out.println("upload done in " + newFilePath);
+		out.close();
 	}
 
 	private void downloadCMD(DataOutputStream out, String name) throws IOException //TODO mettre try catch instead
