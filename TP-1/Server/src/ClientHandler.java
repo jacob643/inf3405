@@ -44,63 +44,60 @@ public class ClientHandler extends Thread {
 			}
 			catch (IOException e)
 			{
-				System.out.println("Couldn't close a socket, what's going on ?");
+				System.out.println("Couldn't close the socket");
 			}
 			System.out.println("Connexion with client " + clientNumber + " closed");
 		}
+		
+		
 	}
 	
-	public boolean readCommands()
+	public boolean readCommands() throws IOException
 	{
 		boolean res = true;	
 		
-		try
-		{
-			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-			DataInputStream in = new DataInputStream(socket.getInputStream());		
-			String cmd = in.readUTF();
-			String[] cmdWord = cmd.split(" ", 2);
-			
-			System.out.println("[" + socket.getInetAddress() + ":" + socket.getLocalPort() + ":" + socket.getPort() + " - " + getTime() + "] > " + cmd);
+
+		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+		DataInputStream in = new DataInputStream(socket.getInputStream());		
+		String cmd = in.readUTF();
+		String[] cmdWord = cmd.split(" ", 2);
 		
-			
-			if(cmdWord[0].equalsIgnoreCase("exit"))
-			{
-				out.writeUTF("quit : done !");
-				out.writeUTF("end");
-				res = false;
-			}
-			else if(cmdWord[0].equalsIgnoreCase("ls"))
-			{
-				lsCMD(out);
-			}
-			else if(cmdWord[0].equalsIgnoreCase("cd"))
-			{
-				cdCMD(out, cmdWord);
-			}
-			else if(cmdWord[0].equalsIgnoreCase("mkdir"))
-			{
-				mkdirCMD(out, cmdWord[1]);
-			}
-			else if(cmdWord[0].equalsIgnoreCase("download"))
-			{
-				downloadCMD(out, cmdWord[1]);
-			}
-			else if(cmdWord[0].equalsIgnoreCase("upload"))
-			{
-				uploadCMD(cmdWord[1]);
-			}
-			else
-			{
-				System.out.println("Wrong command...");
-				out.writeUTF("Wrong command...");
-				out.writeUTF("end");
-			}
-		}
-		catch (IOException e)
+		System.out.println("[" + socket.getInetAddress() + ":" + socket.getLocalPort() + ":" + socket.getPort() + " - " + getTime() + "] > " + cmd);
+	
+		
+		if(cmdWord[0].equalsIgnoreCase("exit"))
 		{
-			System.out.println("Error handling client " + clientNumber + "; " + e);
+			out.writeUTF("quit : done !");
+			out.writeUTF("end");
+			res = false;
 		}
+		else if(cmdWord[0].equalsIgnoreCase("ls"))
+		{
+			lsCMD(out);
+		}
+		else if(cmdWord[0].equalsIgnoreCase("cd"))
+		{
+			cdCMD(out, cmdWord);
+		}
+		else if(cmdWord[0].equalsIgnoreCase("mkdir"))
+		{
+			mkdirCMD(out, cmdWord[1]);
+		}
+		else if(cmdWord[0].equalsIgnoreCase("download"))
+		{
+			downloadCMD(out, cmdWord[1]);
+		}
+		else if(cmdWord[0].equalsIgnoreCase("upload"))
+		{
+			uploadCMD(cmdWord[1]);
+		}
+		else
+		{
+			System.out.println("Wrong command...");
+			out.writeUTF("Wrong command...");
+			out.writeUTF("end");
+		}
+
 		return res;
 	}
 	
