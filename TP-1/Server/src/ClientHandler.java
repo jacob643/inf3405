@@ -219,20 +219,12 @@ public class ClientHandler extends Thread {
 			
 			for (int i=0; i<currentPathList.length; i++)
 			{
-				String test = currentPathList[i];
-				String[] currentPathListDivided = test.split("\\.");
-				if(currentPathListDivided.length != 1)
-				{
-					out.writeUTF("[FILE] " + currentPathList[i]);
-				}
-				else
-				{
-					out.writeUTF("[FOLDER] " + currentPathList[i]);
-				}
-				
+				String type = (Files.isRegularFile(Paths.get(currentPath.toString() + "\\" + currentPathList[i])))
+						? "[File] " : "[Folder] ";
+
+				out.writeUTF(type + currentPathList[i]);
 			}
 			out.writeUTF("end");
-			
 		}
 		catch(IOException e)
 		{
@@ -266,8 +258,12 @@ public class ClientHandler extends Thread {
 			// check for parent folder
 			if(cmdWord[1].equals(".."))
 			{
-				newPath = currentPath.getParent().toString();
-				newPathExist = true;
+				Path parent = currentPath.getParent();
+				if(parent != null) // in case we did cd .. when in C:
+				{
+					newPath = currentPath.getParent().toString();
+					newPathExist = true;
+				}
 			}
 			
 			// check for root folder
@@ -285,7 +281,8 @@ public class ClientHandler extends Thread {
 				String[] currentPathList = currentPath.toFile().list();
 				for (int i=0; i<currentPathList.length && !newPathExist; i++)
 				{
-					newPathExist = currentPathList[i].equals(followingPath);
+					newPathExist = currentPathList[i].equals(followingPath) 
+							&& Files.isDirectory(Paths.get(currentPath.toString() + "\\" + followingPath));
 				}
 				newPath = newPath + "\\" + followingPath;
 			}
