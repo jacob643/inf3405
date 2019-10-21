@@ -136,12 +136,17 @@ public class Client {
 	
 	private static void ReceiveDownloadAnswer(String filename) throws IOException
 	{
-		System.out.println("in download cmd");
-
 		DataInputStream in = new DataInputStream(socket.getInputStream());
 		String home = System.getProperty("user.home");
 		String filePath = home + "\\Desktop\\";
 		OutputStream out = null;
+		
+		String msgFromClient = in.readUTF();
+		if (msgFromClient.equals("download error"))
+		{
+			System.out.println("download error : Wrong argument");
+			return;
+		}
 
 		int i = 0;
 		boolean work = false;
@@ -152,7 +157,6 @@ public class Client {
 			{
 				newFilePath = Paths.get(filePath + "(copy " + Integer.toString(i) + ")" + filename);
 			}
-			System.out.println(newFilePath.toString());
 			try
 			{
 				out = Files.newOutputStream(newFilePath, StandardOpenOption.CREATE_NEW);
@@ -162,13 +166,13 @@ public class Client {
 			
 		} while (!work);
 		
-		System.out.println("in and out created");
-		
 		long lengthToRead = in.readLong();
 		long initial = lengthToRead;
 		byte[] chunk = new byte[1000];
 		int length;
 		long progress = 0;
+		
+		System.out.println("downloading " + lengthToRead + " byte!");
 		
 		while(lengthToRead > 0)
 		{
@@ -184,32 +188,46 @@ public class Client {
 		
 	}
 	
+	
 	private static void SendUpload(DataOutputStream out, String filename) throws IOException
-	{
-		System.out.println("in upload cmd");
-
+	{		
 		String home = System.getProperty("user.home");
 		Path filePath = Paths.get(home + "\\Desktop\\" + filename);
-	
-		InputStream in = Files.newInputStream(filePath, StandardOpenOption.READ);
 
 		File file = new File(filePath.toString());
-		if (!file.exists() || !file.isFile()) return;
+
+		if (!file.exists() || !file.isFile()) 
+		{
+			System.out.println("upload error : Wrong argument");
+			out.writeUTF("upload error");
+			return;
+		}
+		else
+		{
+			out.writeUTF("no error");
+		}
+		
+		InputStream in = Files.newInputStream(filePath, StandardOpenOption.READ);
 
 		long LengthToWrite = file.length();
 		
-		System.out.println(LengthToWrite + " bytes!");
+		System.out.println("uploading " + LengthToWrite + " bytes!");
 		out.writeLong(LengthToWrite);
 		byte[] chunk = new byte[1000];
+		long initial = LengthToWrite;
+		long progress = 0;
+		
 
 		while(LengthToWrite > 0)
 		{
 			int length = in.read(chunk);
 			out.write(chunk, 0 , length);
-			System.out.println("write done! " + length + " bytes");
 			LengthToWrite -= length;
+			long newProgress = 10 - (LengthToWrite*10)/initial;
+			if (newProgress != progress) System.out.println(newProgress + "0%");
+			progress = newProgress;
 		}
-		System.out.println("write done!");
+		System.out.println("upload done !");
 		in.close();
 	}
 	
@@ -217,7 +235,7 @@ public class Client {
 	{
 		boolean exit = false;
 		String cmd = userInput.nextLine();
-		String[] cmdWord = cmd.split(" ");
+		String[] cmdWord = cmd.split(" ", 2);
 		
 		if(cmdWord[0].equals("exit"))
 		{

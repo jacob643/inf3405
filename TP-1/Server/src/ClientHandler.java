@@ -89,11 +89,10 @@ public class ClientHandler extends Thread {
 		}
 		else if(cmdWord[0].equalsIgnoreCase("upload"))
 		{
-			uploadCMD(cmdWord[1]);
+			uploadCMD(out, cmdWord[1]);
 		}
 		else
 		{
-			System.out.println("Wrong command...");
 			out.writeUTF("Wrong command...");
 			out.writeUTF("end");
 		}
@@ -101,12 +100,16 @@ public class ClientHandler extends Thread {
 		return res;
 	}
 	
-	private void uploadCMD(String name) throws IOException
+	private void uploadCMD(DataOutputStream outStream, String name) throws IOException
 	{
-		System.out.println("in upload cmd");
-
 		DataInputStream in = new DataInputStream(socket.getInputStream());
 		OutputStream out = null;
+		
+		String msgFromClient = in.readUTF();
+		if (msgFromClient.equals("upload error"))
+		{
+			return;
+		}
 
 		int i = 0;
 		boolean work = false;
@@ -117,7 +120,6 @@ public class ClientHandler extends Thread {
 			{
 				newFilePath = Paths.get(currentPath + "//" + "(copy " + Integer.toString(i) + ")" + name);
 			}
-			System.out.println(newFilePath.toString());
 			try
 			{
 				out = Files.newOutputStream(newFilePath, StandardOpenOption.CREATE_NEW);
@@ -127,37 +129,38 @@ public class ClientHandler extends Thread {
 			
 		} while (!work);
 		
-		System.out.println("in and out created");
-		
 		long lengthToRead = in.readLong();
-		long initial = lengthToRead;
 		byte[] chunk = new byte[1000];
 		int length;
-		long progress = 0;
 		
 		while(lengthToRead > 0)
-		{
+		{	
 			length = in.read(chunk);
 			out.write(chunk, 0, length);
 			lengthToRead -= length;
-			long newProgress = 100 - (lengthToRead*100)/initial;
-			if (newProgress != progress) System.out.print(newProgress + "%");
-			progress = newProgress;
 		}
-		System.out.println("upload done in " + newFilePath);
 		out.close();
 	}
 
 	private void downloadCMD(DataOutputStream out, String name) throws IOException
 	{
 		Path filePath = Paths.get(currentPath.toString() + "\\" + name);
-		InputStream in = Files.newInputStream(filePath, StandardOpenOption.READ);
 
 		File file = new File(filePath.toString());
-		if (!file.exists() || !file.isFile()) return;
+		if (!file.exists() || !file.isFile()) 
+		{
+			out.writeUTF("download error");
+			return;
+		}
+		else
+		{
+			out.writeUTF("no error");
+		}
 
-		long LengthToWrite = file.length();
+		InputStream in = Files.newInputStream(filePath, StandardOpenOption.READ);
 		
+		long LengthToWrite = file.length();
+				
 		out.writeLong(LengthToWrite);
 		byte[] chunk = new byte[1000];
 
@@ -192,7 +195,6 @@ public class ClientHandler extends Thread {
 			
 			try
 			{			
-				System.out.println("cd error : The directory " + name + " already exist !");
 				out.writeUTF("cd error : The directory " + name + " already exist !");
 				out.writeUTF("end");
 			}
